@@ -35,7 +35,6 @@ export default function RootLayout({
           appearance={{ theme: shadcn }}
           signInUrl="/sign-in"
           signUpUrl="/sign-up"
-          taskUrls={{ "choose-organization": "/session-tasks/choose-organization" }}
         >
           <ThemeProvider>
             {children}

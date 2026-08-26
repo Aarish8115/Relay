@@ -1,24 +1,71 @@
 "use client"
 
 import * as React from "react"
-import { ThemeProvider as NextThemesProvider, useTheme } from "next-themes"
+
+type Theme = "light" | "dark" | "system"
+
+type ThemeContextValue = {
+  resolvedTheme: "light" | "dark"
+  setTheme: (theme: Theme) => void
+}
+
+const ThemeContext = React.createContext<ThemeContextValue | null>(null)
 
 function ThemeProvider({
   children,
-  ...props
-}: React.ComponentProps<typeof NextThemesProvider>) {
+}: Readonly<{ children: React.ReactNode }>) {
+  const [theme, setThemeState] = React.useState<Theme>(() => {
+    if (typeof window === "undefined") {
+      return "system"
+    }
+
+    return (window.localStorage.getItem("theme") as Theme | null) ?? "system"
+  })
+  const [resolvedTheme, setResolvedTheme] = React.useState<
+    "light" | "dark"
+  >("light")
+
+
+  React.useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)")
+    const updateTheme = () => {
+      const nextTheme =
+        theme === "system"
+          ? mediaQuery.matches
+            ? "dark"
+            : "light"
+          : theme
+
+      document.documentElement.classList.toggle("dark", nextTheme === "dark")
+      setResolvedTheme(nextTheme)
+    }
+
+    updateTheme()
+    mediaQuery.addEventListener("change", updateTheme)
+
+    return () => mediaQuery.removeEventListener("change", updateTheme)
+  }, [theme])
+
+  function setTheme(nextTheme: Theme) {
+    window.localStorage.setItem("theme", nextTheme)
+    setThemeState(nextTheme)
+  }
+
   return (
-    <NextThemesProvider
-      attribute="class"
-      defaultTheme="system"
-      enableSystem
-      disableTransitionOnChange
-      {...props}
-    >
+    <ThemeContext.Provider value={{ resolvedTheme, setTheme }}>
       <ThemeHotkey />
       {children}
-    </NextThemesProvider>
+    </ThemeContext.Provider>
   )
+}
+
+function useTheme() {
+  const context = React.useContext(ThemeContext)
+  if (!context) {
+    throw new Error("useTheme must be used within a ThemeProvider.")
+  }
+
+  return context
 }
 
 function isTypingTarget(target: EventTarget | null) {
