@@ -11,9 +11,7 @@ type ThemeContextValue = {
 
 const ThemeContext = React.createContext<ThemeContextValue | null>(null)
 
-function ThemeProvider({
-  children,
-}: Readonly<{ children: React.ReactNode }>) {
+function ThemeProvider({ children }: Readonly<{ children: React.ReactNode }>) {
   const [theme, setThemeState] = React.useState<Theme>(() => {
     if (typeof window === "undefined") {
       return "system"
@@ -21,20 +19,15 @@ function ThemeProvider({
 
     return (window.localStorage.getItem("theme") as Theme | null) ?? "system"
   })
-  const [resolvedTheme, setResolvedTheme] = React.useState<
-    "light" | "dark"
-  >("light")
-
+  const [resolvedTheme, setResolvedTheme] = React.useState<"light" | "dark">(
+    "light"
+  )
 
   React.useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)")
     const updateTheme = () => {
       const nextTheme =
-        theme === "system"
-          ? mediaQuery.matches
-            ? "dark"
-            : "light"
-          : theme
+        theme === "system" ? (mediaQuery.matches ? "dark" : "light") : theme
 
       document.documentElement.classList.toggle("dark", nextTheme === "dark")
       setResolvedTheme(nextTheme)
