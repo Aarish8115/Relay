@@ -1,8 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { Plus, Workflow } from "lucide-react"
-import { toast } from "sonner"
+import { useTransition } from "react"
+import { Plus, Workflow as WorkflowIcon } from "lucide-react"
 
 import {
   Popover,
@@ -20,32 +20,28 @@ import {
   SidebarSeparator,
   useSidebar,
 } from "@/components/ui/sidebar"
+import { Workflow } from "@/db/schema"
+import { generateSlug } from "../lib/generate-slug"
 
-const workflows = [
-  "dominant-wasp",
-  "honest-reindeer",
-  "expected-llama",
-  "essential-ocelot",
-  "creepy-echidna",
-  "eastern-silkworm",
-  "cultural-lion",
-  "proud-weasel",
-  "regional-bonobo",
-]
+type WorkflowNavProps = {
+  workflows: Workflow[]
+  onCreateWorkflow: (name: string) => Promise<void>
+}
 
-function WorkflowNav() {
+function WorkflowNav({ workflows, onCreateWorkflow }: WorkflowNavProps) {
   const { state } = useSidebar()
-  const [activeWorkflow, setActiveWorkflow] = React.useState(workflows[0])
+  const [isPending, startTransition] = useTransition()
+
+  const handleCreateWorkflow = () => {
+    startTransition(async () => {
+      await onCreateWorkflow(generateSlug())
+    })
+  }
 
   const workflowItems = workflows.map((workflow) => (
-    <SidebarMenuItem key={workflow}>
-      <SidebarMenuButton
-        isActive={workflow === activeWorkflow}
-        size="default"
-        onClick={() => setActiveWorkflow(workflow)}
-        className="h-9 rounded-lg px-3 text-sm"
-      >
-        <span>{workflow}</span>
+    <SidebarMenuItem key={workflow.id}>
+      <SidebarMenuButton size="default" className="h-9 rounded-lg px-3 text-sm">
+        <span>{workflow.name}</span>
       </SidebarMenuButton>
     </SidebarMenuItem>
   ))
@@ -61,12 +57,12 @@ function WorkflowNav() {
                   <SidebarMenuButton
                     tooltip="Workflows"
                     size="default"
-                    className="size-9! flex justify-center items-center rounded-lg p-2! [&_svg]:size-4"
+                    className="flex size-9! items-center justify-center rounded-lg p-2! [&_svg]:size-4"
                   >
-                    <Workflow />
-                    {/* <span>Workflows</span> */}
+                    <WorkflowIcon />
                   </SidebarMenuButton>
                 </PopoverTrigger>
+
                 <PopoverContent
                   side="right"
                   align="start"
@@ -76,7 +72,8 @@ function WorkflowNav() {
                     <SidebarMenuItem>
                       <SidebarMenuButton
                         size="default"
-                        onClick={() => toast.success("New workflow")}
+                        onClick={handleCreateWorkflow}
+                        disabled={isPending}
                         className="h-10 rounded-md px-2 text-base font-medium"
                       >
                         <Plus />
@@ -84,7 +81,9 @@ function WorkflowNav() {
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   </SidebarMenu>
+
                   <SidebarSeparator className="mx-0 my-2" />
+
                   <SidebarMenu className="gap-1">{workflowItems}</SidebarMenu>
                 </PopoverContent>
               </Popover>
@@ -100,14 +99,16 @@ function WorkflowNav() {
       <SidebarGroupLabel className="w-full text-sm text-sidebar-foreground/75">
         Workflows
       </SidebarGroupLabel>
+
       <SidebarGroupAction
         aria-label="Create workflow"
         title="Create workflow"
-        onClick={() => toast.success("New workflow")}
+        onClick={handleCreateWorkflow}
         className="top-1.5 right-2"
       >
         <Plus />
       </SidebarGroupAction>
+
       <SidebarGroupContent>
         <SidebarMenu className="gap-1">{workflowItems}</SidebarMenu>
       </SidebarGroupContent>

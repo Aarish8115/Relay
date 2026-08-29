@@ -1,5 +1,3 @@
-"use client"
-
 import { Button } from "@/components/ui/button"
 import {
   Empty,
@@ -10,7 +8,6 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty"
 import { Plus, Workflow } from "lucide-react"
-import { toast } from "sonner"
 
 export default function Page() {
   return (
@@ -32,11 +29,7 @@ export default function Page() {
         </EmptyDescription>
       </EmptyHeader>
       <EmptyContent className="max-w-none">
-        <Button
-          size="lg"
-          className="h-9 rounded-lg px-3 text-sm font-medium"
-          onClick={() => toast.success("New workflow")}
-        >
+        <Button size="lg" className="h-9 rounded-lg px-3 text-sm font-medium">
           <Plus className="size-4" />
           New workflow
         </Button>
