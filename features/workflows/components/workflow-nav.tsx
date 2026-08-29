@@ -2,6 +2,8 @@
 
 import * as React from "react"
 import { useTransition } from "react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { Plus, Workflow as WorkflowIcon } from "lucide-react"
 
 import {
@@ -31,6 +33,7 @@ type WorkflowNavProps = {
 function WorkflowNav({ workflows, onCreateWorkflow }: WorkflowNavProps) {
   const { state } = useSidebar()
   const [isPending, startTransition] = useTransition()
+  const pathname = usePathname()
 
   const handleCreateWorkflow = () => {
     startTransition(async () => {
@@ -38,13 +41,26 @@ function WorkflowNav({ workflows, onCreateWorkflow }: WorkflowNavProps) {
     })
   }
 
-  const workflowItems = workflows.map((workflow) => (
-    <SidebarMenuItem key={workflow.id}>
-      <SidebarMenuButton size="default" className="h-9 rounded-lg px-3 text-sm">
-        <span>{workflow.name}</span>
-      </SidebarMenuButton>
-    </SidebarMenuItem>
-  ))
+  const workflowItems = workflows.map((workflow) => {
+    const isActive =
+      pathname === `/workflows/${workflow.id}` ||
+      pathname.startsWith(`/workflows/${workflow.id}/`)
+
+    return (
+      <SidebarMenuItem key={workflow.id}>
+        <SidebarMenuButton
+          asChild
+          isActive={isActive}
+          size="default"
+          className="h-9 rounded-lg px-3 text-sm"
+        >
+          <Link href={`/workflows/${workflow.id}`}>
+            <span>{workflow.name}</span>
+          </Link>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    )
+  })
 
   if (state === "collapsed") {
     return (
