@@ -4,7 +4,7 @@ import { auth } from "@clerk/nextjs/server"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 
-import { createWorkflow } from "../data"
+import { createWorkflow } from "@/features/data"
 import { tasks } from "@trigger.dev/sdk"
 import { helloWorldTask } from "@/trigger/example"
 

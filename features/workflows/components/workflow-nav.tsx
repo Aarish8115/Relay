@@ -23,7 +23,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import { Workflow } from "@/db/schema"
-import { generateSlug } from "../lib/generate-slug"
+import { generateSlug } from "@/features/workflows/lib/generate-slug"
 
 type WorkflowNavProps = {
   workflows: Workflow[]
