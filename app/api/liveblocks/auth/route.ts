@@ -12,10 +12,11 @@ export async function POST() {
     {
       userId,
       groupIds: orgId ? [orgId] : [],
+      organizationId: orgId,
     },
     {
       userInfo: { name: userId },
-    },
+    }
   )
 
   return new Response(body, { status })

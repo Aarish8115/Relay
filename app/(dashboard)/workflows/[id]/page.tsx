@@ -14,10 +14,11 @@ export default async function Page({
   const { orgId } = await auth()
   if (!orgId) notFound()
 
-  const workflow=await getWorkflow(orgId,id)
-  if(!workflow) notFound()
+  const workflow = await getWorkflow(orgId, id)
+  if (!workflow) notFound()
 
   await liveblocks.getOrCreateRoom(id, {
+    organizationId: orgId,
     defaultAccesses: [],
     groupsAccesses: {
       [orgId]: ["room:write"],

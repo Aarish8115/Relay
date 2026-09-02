@@ -14,9 +14,7 @@ import { listWorkflows } from "@/features/data"
 import { createWorkflowAction } from "@/features/workflows/actions"
 import { WorkflowNav } from "@/features/workflows/components/workflow-nav"
 
-async function AppSidebar({
-  ...props
-}: React.ComponentProps<typeof Sidebar>) {
+async function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { orgId } = await auth()
 
   const workflows = orgId ? await listWorkflows(orgId) : []
@@ -25,6 +23,9 @@ async function AppSidebar({
     <Sidebar variant="inset" collapsible="icon" className="p-1" {...props}>
       <SidebarHeader className="w-full flex-row items-center justify-between gap-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0">
         <OrganizationSwitcher
+          afterCreateOrganizationUrl={"/"}
+          afterLeaveOrganizationUrl={"/"}
+          afterSelectOrganizationUrl={"/"}
           hidePersonal
           appearance={{
             elements: {
@@ -51,8 +52,7 @@ async function AppSidebar({
               rootBox: "w-full",
               userButtonTrigger:
                 "w-full justify-start group-data-[collapsible=icon]:justify-center",
-              userButtonOuterIdentifier:
-                "group-data-[collapsible=icon]:hidden",
+              userButtonOuterIdentifier: "group-data-[collapsible=icon]:hidden",
             },
           }}
         />
