@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { MoreHorizontal, Play, Trash2 } from "lucide-react"
+import { toast } from "sonner"
 
 import {
   Accordion,
@@ -30,6 +31,7 @@ import {
   type StepNodeKind,
   type StepNodeType,
 } from "@/features/workflows/nodes/node-registry"
+import { useReactFlow, useStore, type Edge } from "@xyflow/react"
 
 // This file builds up to the RightSidebar component exported at the bottom: a
 // header with workflow actions (delete, run), then two tabs — a Toolbar for
@@ -158,9 +160,46 @@ const definitions = Object.values(nodeRegistry)
 
 // The Toolbar tab: a button per node type that adds it to the canvas.
 function Palette() {
+  const { addNodes, screenToFlowPosition } = useReactFlow<StepNodeType, Edge>()
+  const nodes = useStore((state) => state.nodes as StepNodeType[])
+  const domNode = useStore((state) => state.domNode)
+
   const add = (type: NodeType) => {
-    // TODO: add the clicked node to the canvas (one trigger max).
-    void type
+    const definition = nodeRegistry[type]
+
+    if (
+      definition.kind === "trigger" &&
+      nodes.some((node) => node.data.kind === "trigger")
+    ) {
+      toast.error("Only one trigger node is allowed")
+      return
+    }
+
+    const sameTypeCount = nodes.filter((node) => node.data.type === type).length
+    const title = `${definition.label} ${sameTypeCount + 1}`
+    const bounds = domNode?.getBoundingClientRect()
+
+    if (!bounds) {
+      toast.error("The canvas is not ready yet")
+      return
+    }
+
+    const center = screenToFlowPosition({
+      x: bounds.left + bounds.width / 2,
+      y: bounds.top + bounds.height / 2,
+    })
+
+    addNodes({
+      id: crypto.randomUUID(),
+      type: "step",
+      position: { x: center.x - 100, y: center.y - 30 },
+      data: {
+        type,
+        kind: definition.kind,
+        title,
+        values: {},
+      },
+    })
   }
 
   return (

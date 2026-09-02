@@ -3,6 +3,7 @@ import { Room } from "@/features/workflows/components/room"
 import { WorkflowShell } from "@/features/workflows/components/workflow-shell"
 import { liveblocks } from "@/lib/liveblocks"
 import { auth } from "@clerk/nextjs/server"
+import { ReactFlowProvider } from "@xyflow/react"
 import { notFound } from "next/navigation"
 
 export default async function Page({
@@ -27,7 +28,9 @@ export default async function Page({
 
   return (
     <Room roomId={id}>
-      <WorkflowShell workflowId={id} />
+      <ReactFlowProvider>
+        <WorkflowShell workflowId={id} />
+      </ReactFlowProvider>
     </Room>
   )
 }
