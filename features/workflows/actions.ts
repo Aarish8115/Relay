@@ -11,7 +11,7 @@ import {
 } from "@/features/data"
 import { liveblocks } from "@/lib/liveblocks"
 import { runs, tasks } from "@trigger.dev/sdk"
-import { helloWorldTask } from "@/trigger/example"
+import type { runWorkflowTask } from "./tasks/run-workflow"
 import { WorkflowGraph } from "@/db/schema"
 
 export async function createWorkflowAction(name: string) {
@@ -60,9 +60,14 @@ export async function runWorkflowAction({
 
   await saveWorkflowGraph({ orgId, id, graph })
 
-  const handle = await tasks.trigger<typeof helloWorldTask>("hello-world", {
-    message: "Hello from right-sidebar",
-  })
+  const handle = await tasks.trigger<typeof runWorkflowTask>(
+    "run-workflow",
+    {
+      workflowId: id,
+      orgId,
+    },
+    { tags: [`workflow:${id}`] }
+  )
 
   return handle
 }

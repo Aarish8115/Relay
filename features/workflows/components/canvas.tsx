@@ -71,6 +71,7 @@ const Canvas = () => {
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         onDelete={onDelete}
+        deleteKeyCode={["Delete", "Backspace"]}
         colorMode={colorMode}
         fitView
         connectionLineType={ConnectionLineType.SmoothStep}
