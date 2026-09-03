@@ -1,7 +1,9 @@
 import toposort from "toposort"
 import { logger, task } from "@trigger.dev/sdk"
 
-import { getWorkflow } from "@/features/data";
+import { getWorkflow } from "@/features/data"
+import { browserbase, Stagehand } from "@browserbasehq/stagehand"
+import { nodeExecutors } from "../nodes/node-executors"
 
 // The Trigger.dev task the Run button fires. It loads the saved graph, works out
 // what order the nodes should run in, and walks them. For now each node just
@@ -28,11 +30,40 @@ export const runWorkflowTask = task({
 
     logger.log(`Running workflow ${workflow.name}`, { steps: order.length })
 
-    for (const id of order) {
-      const node = byId.get(id)!
-      logger.log(`Running step: ${node.data.title}`)
-      // TODO: actually execute the node instead of just logging it, and report
-      // its progress so the UI can watch the run live.
+    let stagehand: Stagehand | undefined
+    let browser: Awaited<ReturnType<typeof browserbase.launch>> | undefined
+    const getStagehand = async () => {
+      if (stagehand) return stagehand
+      const apiKey = process.env.BROWSERBASE_API_KEY
+      const extensionId =
+        process.env.BROWSERBASE_STAGEHAND_EXTENSION_ID ??
+        "11d1c707-7adc-4b09-958c-6479c59b6dd8"
+      if (!apiKey) throw new Error("BROWSERBASE_API_KEY is required")
+
+      browser = await browserbase.launch({ apiKey, extensionId })
+      stagehand = await Stagehand.create({
+        browser,
+        model: { modelName: "google/gemini-2.5-flash" },
+        logging: { level: "off" },
+      })
+      return stagehand
+    }
+
+    try {
+      for (const id of order) {
+        const node = byId.get(id)!
+        logger.log(`Running step: ${node.data.title}`)
+        // TODO: actually execute the node instead of just logging it, and report
+        // its progress so the UI can watch the run live.
+        const executor = nodeExecutors[node.data.type]
+        if (executor) await executor({ values: node.data.values, getStagehand })
+      }
+    } finally {
+      if (stagehand) {
+        await stagehand.close()
+      } else {
+        await browser?.close()
+      }
     }
 
     return { steps: order.length }
