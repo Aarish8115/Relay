@@ -36,8 +36,7 @@ export const runWorkflowTask = task({
       if (stagehand) return stagehand
       const apiKey = process.env.BROWSERBASE_API_KEY
       const extensionId =
-        process.env.BROWSERBASE_STAGEHAND_EXTENSION_ID ??
-        "11d1c707-7adc-4b09-958c-6479c59b6dd8"
+        process.env.BROWSERBASE_STAGEHAND_EXTENSION_ID 
       if (!apiKey) throw new Error("BROWSERBASE_API_KEY is required")
 
       browser = await browserbase.launch({ apiKey, extensionId })
@@ -53,8 +52,7 @@ export const runWorkflowTask = task({
       for (const id of order) {
         const node = byId.get(id)!
         logger.log(`Running step: ${node.data.title}`)
-        // TODO: actually execute the node instead of just logging it, and report
-        // its progress so the UI can watch the run live.
+        
         const executor = nodeExecutors[node.data.type]
         if (executor) await executor({ values: node.data.values, getStagehand })
       }
