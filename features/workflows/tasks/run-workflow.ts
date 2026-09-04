@@ -1,10 +1,15 @@
 import toposort from "toposort"
-import { logger, task } from "@trigger.dev/sdk"
+import { logger, metadata, task } from "@trigger.dev/sdk"
 
 import { getWorkflow } from "@/features/data"
 import { browserbase, Stagehand } from "@browserbasehq/stagehand"
 import { interpolate } from "../lib/interpolate"
 import { nodeExecutors } from "../nodes/node-executors"
+
+export type RunStep = {
+  id: string
+  status: "pending" | "running" | "done" | "failed"
+}
 
 // The Trigger.dev task the Run button fires. It loads the saved graph, works out
 // what order the nodes should run in, and walks them. For now each node just
@@ -28,7 +33,13 @@ export const runWorkflowTask = task({
         edges.map((e) => [e.source, e.target])
       )
       .filter((id) => connected.has(id))
+    const steps: RunStep[] = order.map((id) => ({
+      id,
+      status: "pending",
+    }))
     const nodeOutputs: Record<string, unknown> = {}
+
+    metadata.set("steps", steps)
 
     logger.log(`Running workflow ${workflow.name}`, { steps: order.length })
 
@@ -61,9 +72,23 @@ export const runWorkflowTask = task({
             interpolate(value, nodeOutputs),
           ])
         )
-        nodeOutputs[id] = executor
-          ? await executor({ values, getStagehand })
-          : undefined
+        const step = steps.find((item) => item.id === id)!
+        step.status = "running"
+        metadata.set("steps", steps)
+        await metadata.flush()
+
+        try {
+          nodeOutputs[id] = executor
+            ? await executor({ values, getStagehand })
+            : undefined
+          step.status = "done"
+          metadata.set("steps", steps)
+        } catch (error) {
+          step.status = "failed"
+          metadata.set("steps", steps)
+          await metadata.flush()
+          throw error
+        }
       }
     } finally {
       if (stagehand) {
@@ -73,6 +98,6 @@ export const runWorkflowTask = task({
       }
     }
 
-    return { steps: order.length }
+    return { steps }
   },
 })
