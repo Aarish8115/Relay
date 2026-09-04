@@ -8,7 +8,7 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable"
-import { LogsPanel } from "./logs-panel"
+import { LogsPanel, type ConsoleSelection } from "./logs-panel"
 import { InspectorPanel } from "./inspector-panel"
 import { useWorkflowRuns } from "./workflow-runs-provider"
 import type { RunStep } from "../tasks/run-workflow"
@@ -17,27 +17,38 @@ import type { StepNodeType } from "../nodes/node-registry"
 export function ConsolePanel() {
   const { runs } = useWorkflowRuns()
   const nodes = useStore((state) => state.nodes as StepNodeType[])
-  const [selectedStep, setSelectedStep] = useState<
-    { runId: string; stepId: string } | undefined
-  >()
+  const [selection, setSelection] = useState<ConsoleSelection | undefined>()
 
-  const selectStep = (runId: string, stepId: string) => {
-    setSelectedStep((current) =>
-      current?.runId === runId && current.stepId === stepId
-        ? undefined
-        : { runId, stepId }
-    )
+  const select = (nextSelection: ConsoleSelection) => {
+    setSelection((current) => {
+      const isSameSelection =
+        current?.runId === nextSelection.runId &&
+        ("stepId" in current
+          ? "stepId" in nextSelection && current.stepId === nextSelection.stepId
+          : "replay" in nextSelection)
+
+      return isSameSelection ? undefined : nextSelection
+    })
   }
 
-  const selectedRun = runs.find((run) => run.id === selectedStep?.runId)
+  const selectedRun = runs.find((run) => run.id === selection?.runId)
   const selectedSteps = selectedRun
     ? ((selectedRun.output?.steps ?? selectedRun.metadata?.steps) as
         | RunStep[]
         | undefined)
     : undefined
-  const selected = selectedSteps?.find(
-    (step) => step.id === selectedStep?.stepId
-  )
+  const selectedStep =
+    selection && "stepId" in selection
+      ? selectedSteps?.find((step) => step.id === selection.stepId)
+      : undefined
+  const selectedSessionId =
+    selection && "replay" in selection ? selectedRun?.sessionId : undefined
+
+  const inspector = selectedSessionId
+    ? { sessionId: selectedSessionId }
+    : selectedStep
+      ? { step: selectedStep }
+      : undefined
 
   return (
     <ResizablePanelGroup
@@ -48,15 +59,15 @@ export function ConsolePanel() {
         <LogsPanel
           runs={runs}
           nodes={nodes}
-          selectedStep={selectedStep}
-          onSelectStep={selectStep}
+          selection={selection}
+          onSelect={select}
         />
       </ResizablePanel>
-      {selected && (
+      {inspector && (
         <>
           <ResizableHandle withHandle />
           <ResizablePanel defaultSize="35%" minSize="12rem">
-            <InspectorPanel step={selected} />
+            <InspectorPanel {...inspector} />
           </ResizablePanel>
         </>
       )}

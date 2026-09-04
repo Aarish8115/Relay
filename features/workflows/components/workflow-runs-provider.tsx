@@ -5,9 +5,13 @@ import { useRealtimeRunsWithTag } from "@trigger.dev/react-hooks"
 
 import type { runWorkflowTask, RunStep } from "../tasks/run-workflow"
 
-export type WorkflowRun = ReturnType<
+type TriggerWorkflowRun = ReturnType<
   typeof useRealtimeRunsWithTag<typeof runWorkflowTask>
 >["runs"][number]
+
+export type WorkflowRun = TriggerWorkflowRun & {
+  sessionId: string | undefined
+}
 
 type WorkflowRunsContextValue = {
   runs: WorkflowRun[]
@@ -29,12 +33,16 @@ export function WorkflowRunsProvider({
   publicAccessToken: string
   children: ReactNode
 }) {
-  const { runs } = useRealtimeRunsWithTag<typeof runWorkflowTask>(
+  const { runs: realtimeRuns } = useRealtimeRunsWithTag<typeof runWorkflowTask>(
     `workflow:${workflowId}`,
     {
       accessToken: publicAccessToken,
     }
   )
+  const runs: WorkflowRun[] = realtimeRuns.map((run) => ({
+    ...run,
+    sessionId: run.output?.sessionId,
+  }))
 
   const latestRun = runs.reduce<(typeof runs)[number] | undefined>(
     (latest, run) =>

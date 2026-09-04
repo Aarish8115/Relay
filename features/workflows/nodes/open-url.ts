@@ -10,5 +10,5 @@ export async function openUrl({
   const [page] = await stagehand.browser.context.pages()
   await page.goto(url, { waitUntil: "load", timeout: 30_000 })
 
-  return { url: page.url(), title: await page.title() }
+  return { url: String(page.url()), title: await page.title() }
 }

@@ -66,6 +66,7 @@ export const runWorkflowTask = task({
 
     let stagehand: Stagehand | undefined
     let browser: Awaited<ReturnType<typeof browserbase.launch>> | undefined
+    let sessionId: string | undefined
     const getStagehand = async () => {
       if (stagehand) return stagehand
       const apiKey = process.env.BROWSERBASE_API_KEY
@@ -78,6 +79,7 @@ export const runWorkflowTask = task({
         api_timeout: 3600,
         userMetadata: { stagehand: "true" },
       })
+      sessionId = browser.sessionId
       stagehand = await Stagehand.create({
         browser,
         model: { modelName: "google/gemini-2.5-flash" },
@@ -140,6 +142,6 @@ export const runWorkflowTask = task({
       }
     }
 
-    return { steps }
+    return { steps, sessionId }
   },
 })

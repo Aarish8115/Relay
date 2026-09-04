@@ -1,8 +1,24 @@
 "use client"
 
 import type { RunStep } from "../tasks/run-workflow"
+import { SessionReplay } from "./session-replay"
 
-export function InspectorPanel({ step }: { step: RunStep }) {
+export function InspectorPanel(
+  props: { step: RunStep } | { sessionId: string }
+) {
+  if ("sessionId" in props) {
+    return (
+      <aside className="flex min-h-0 min-w-0 flex-1 flex-col border-l border-border bg-card">
+        <div className="shrink-0 border-b border-border px-3 py-2 text-xs font-semibold">
+          Replay
+        </div>
+        <SessionReplay sessionId={props.sessionId} className="min-h-0 flex-1" />
+      </aside>
+    )
+  }
+
+  const { step } = props
+
   return (
     <aside className="flex min-h-0 min-w-0 flex-1 flex-col border-l border-border bg-card">
       <div className="shrink-0 border-b border-border px-3 py-2 text-xs font-semibold">
