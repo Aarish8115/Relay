@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useTransition } from "react"
-import { CircleHelp, MoreHorizontal, Play, Trash2 } from "lucide-react"
+import { CircleHelp, MoreHorizontal, Play, Square, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
 import {
@@ -24,6 +24,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 import {
+  cancelWorkflowRunAction,
   deleteWorkflowAction,
   runWorkflowAction,
 } from "@/features/workflows/actions"
@@ -39,6 +40,7 @@ import {
 import { useReactFlow, useStore, type Edge } from "@xyflow/react"
 import { useUpstreamConnections } from "../hooks/use-upstream-connections"
 import { validateGraph } from "../lib/validate-graph"
+import { useWorkflowRuns } from "./workflow-runs-provider"
 
 // This file builds up to the RightSidebar component exported at the bottom: a
 // header with workflow actions (delete, run), then two tabs — a Toolbar for
@@ -343,15 +345,23 @@ function ActionsMenu({ workflowId }: { workflowId: string }) {
 // Kicks off a run of the current workflow.
 function RunButton({ workflowId }: { workflowId: string }) {
   const { getEdges, getNodes } = useReactFlow<StepNodeType>()
+  const { isLive, latestRun } = useWorkflowRuns()
   const [isPending, startTransition] = useTransition()
+  const isRunning = isLive && latestRun !== undefined
 
   return (
     <Button
       size="sm"
       disabled={isPending}
-      variant="secondary"
+      variant={isRunning?"destructive":"secondary"}
       onClick={() => {
-        // TODO: validate the graph and run the workflow (toggle to Stop while running).
+        if (isRunning) {
+          startTransition(async () => {
+            await cancelWorkflowRunAction(latestRun.id)
+          })
+          return
+        }
+
         const graph = { nodes: getNodes(), edges: getEdges() }
         const problems = validateGraph(graph)
         if (problems.length > 0) {
@@ -364,8 +374,8 @@ function RunButton({ workflowId }: { workflowId: string }) {
         })
       }}
     >
-      <Play fill="primary" />
-      Run
+      {isRunning ? <Square fill="currentColor" /> : <Play fill="primary" />}
+      {isRunning ? "Stop" : "Run"}
     </Button>
   )
 }

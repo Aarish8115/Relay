@@ -1,7 +1,7 @@
 "use client"
 
 import prettyMs from "pretty-ms"
-import { Check, Play, X } from "lucide-react"
+import { Check, X, MonitorPlay } from "lucide-react"
 
 import { Spinner } from "@/components/ui/spinner"
 import { cn } from "@/lib/utils"
@@ -11,8 +11,7 @@ import type { RunStep } from "../tasks/run-workflow"
 import type { StepNodeType } from "../nodes/node-registry"
 
 export type ConsoleSelection =
-  | { runId: string; stepId: string }
-  | { runId: string; replay: true }
+  { runId: string; stepId: string } | { runId: string; replay: true }
 
 function StepStatus({ status }: { status: RunStep["status"] }) {
   if (status === "running") return <Spinner className="size-3.5" />
@@ -61,11 +60,13 @@ export function LogsPanel({
     <div className="size-full overflow-y-auto">
       {sortedRuns.map((run) => {
         const steps = (run.output?.steps ?? run.metadata?.steps) as
-          | RunStep[]
-          | undefined
+          RunStep[] | undefined
 
         return (
-          <section key={run.id} className="border-b border-border last:border-b-0">
+          <section
+            key={run.id}
+            className="border-b border-border last:border-b-0"
+          >
             <div className="flex items-center justify-between gap-3 border-b border-border/70 px-3 py-2 text-xs">
               <div className="flex min-w-0 items-center gap-2">
                 <span className="font-semibold">Run</span>
@@ -123,7 +124,7 @@ export function LogsPanel({
                 onClick={() => onSelect({ runId: run.id, replay: true })}
               >
                 <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
-                  <Play className="size-3.5" />
+                  <MonitorPlay className="size-3.5" />
                 </span>
                 <span className="min-w-0 flex-1 truncate text-xs font-medium">
                   Replay

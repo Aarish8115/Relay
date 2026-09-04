@@ -34,8 +34,7 @@ export function ConsolePanel() {
   const selectedRun = runs.find((run) => run.id === selection?.runId)
   const selectedSteps = selectedRun
     ? ((selectedRun.output?.steps ?? selectedRun.metadata?.steps) as
-        | RunStep[]
-        | undefined)
+        RunStep[] | undefined)
     : undefined
   const selectedStep =
     selection && "stepId" in selection
@@ -51,10 +50,7 @@ export function ConsolePanel() {
       : undefined
 
   return (
-    <ResizablePanelGroup
-      orientation="horizontal"
-      className="size-full min-h-0"
-    >
+    <ResizablePanelGroup orientation="horizontal" className="size-full min-h-0">
       <ResizablePanel minSize="12rem">
         <LogsPanel
           runs={runs}
