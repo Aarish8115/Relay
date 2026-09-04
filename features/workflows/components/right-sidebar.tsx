@@ -37,6 +37,7 @@ import {
   type StepNodeType,
 } from "@/features/workflows/nodes/node-registry"
 import { useReactFlow, useStore, type Edge } from "@xyflow/react"
+import { useUpstreamConnections } from "../hooks/use-upstream-connections"
 import { validateGraph } from "../lib/validate-graph"
 
 // This file builds up to the RightSidebar component exported at the bottom: a
@@ -115,6 +116,11 @@ function Field({
 // The Editor tab: one input per field on the selected node, or an empty state.
 function Inspector({ node }: { node: StepNodeType | undefined }) {
   const { updateNodeData } = useReactFlow<StepNodeType>()
+  const upstreamConnections = useUpstreamConnections(node)
+  const [lastEditedField, setLastEditedField] = useState<{
+    nodeId: string
+    fieldKey: string
+  }>()
 
   if (!node) {
     return (
@@ -126,6 +132,19 @@ function Inspector({ node }: { node: StepNodeType | undefined }) {
 
   const { type, title, values } = node.data
   const def: NodeDefinition = nodeRegistry[type]
+  const fieldKey =
+    lastEditedField?.nodeId === node.id &&
+    def.fields.some((field) => field.key === lastEditedField.fieldKey)
+      ? lastEditedField.fieldKey
+      : def.fields[0]?.key
+
+  const insertConnection = (token: string) => {
+    if (!fieldKey) return
+
+    updateNodeData(node.id, {
+      values: { ...values, [fieldKey]: `${values[fieldKey] ?? ""}${token}` },
+    })
+  }
 
   return (
     <Section title={title} icon={<NodeIcon type={type} />}>
@@ -143,6 +162,7 @@ function Inspector({ node }: { node: StepNodeType | undefined }) {
                 field={field}
                 value={values[field.key] ?? ""}
                 onChange={(value) => {
+                  setLastEditedField({ nodeId: node.id, fieldKey: field.key })
                   updateNodeData(node.id, {
                     values: { ...values, [field.key]: value },
                   })
@@ -150,6 +170,27 @@ function Inspector({ node }: { node: StepNodeType | undefined }) {
               />
             </div>
           ))
+        )}
+        {upstreamConnections.length > 0 && (
+          <div className="-mx-3 border-t border-border px-3 pt-3">
+            <div className="mb-2 text-xs font-semibold">Connections</div>
+            <div className="flex flex-wrap gap-1.5">
+              {upstreamConnections.map((connection) => (
+                <Button
+                  key={connection.token}
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  disabled={!fieldKey}
+                  className="h-7 gap-1.5 px-2 text-xs"
+                  onClick={() => insertConnection(connection.token)}
+                >
+                  <NodeIcon type={connection.type} className="size-5 rounded" />
+                  {connection.label}
+                </Button>
+              ))}
+            </div>
+          </div>
         )}
       </div>
     </Section>

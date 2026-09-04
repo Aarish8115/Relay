@@ -3,6 +3,7 @@ import { logger, task } from "@trigger.dev/sdk"
 
 import { getWorkflow } from "@/features/data"
 import { browserbase, Stagehand } from "@browserbasehq/stagehand"
+import { interpolate } from "../lib/interpolate"
 import { nodeExecutors } from "../nodes/node-executors"
 
 // The Trigger.dev task the Run button fires. It loads the saved graph, works out
@@ -27,6 +28,7 @@ export const runWorkflowTask = task({
         edges.map((e) => [e.source, e.target])
       )
       .filter((id) => connected.has(id))
+    const nodeOutputs: Record<string, unknown> = {}
 
     logger.log(`Running workflow ${workflow.name}`, { steps: order.length })
 
@@ -35,8 +37,7 @@ export const runWorkflowTask = task({
     const getStagehand = async () => {
       if (stagehand) return stagehand
       const apiKey = process.env.BROWSERBASE_API_KEY
-      const extensionId =
-        process.env.BROWSERBASE_STAGEHAND_EXTENSION_ID 
+      const extensionId = process.env.BROWSERBASE_STAGEHAND_EXTENSION_ID
       if (!apiKey) throw new Error("BROWSERBASE_API_KEY is required")
 
       browser = await browserbase.launch({ apiKey, extensionId })
@@ -52,9 +53,17 @@ export const runWorkflowTask = task({
       for (const id of order) {
         const node = byId.get(id)!
         logger.log(`Running step: ${node.data.title}`)
-        
+
         const executor = nodeExecutors[node.data.type]
-        if (executor) await executor({ values: node.data.values, getStagehand })
+        const values = Object.fromEntries(
+          Object.entries(node.data.values).map(([key, value]) => [
+            key,
+            interpolate(value, nodeOutputs),
+          ])
+        )
+        nodeOutputs[id] = executor
+          ? await executor({ values, getStagehand })
+          : undefined
       }
     } finally {
       if (stagehand) {
