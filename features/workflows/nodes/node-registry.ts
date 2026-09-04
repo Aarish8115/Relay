@@ -1,5 +1,13 @@
 import type { Node } from "@xyflow/react"
-import { Globe, MousePointerClick, type LucideIcon } from "lucide-react"
+import {
+  Bot,
+  Eye,
+  FileText,
+  Globe,
+  MousePointerClick,
+  Play,
+  type LucideIcon,
+} from "lucide-react"
 
 export type StepNodeKind = "trigger" | "action"
 
@@ -33,7 +41,7 @@ export const nodeRegistry = {
     type: "start",
     kind: "trigger",
     label: "Start",
-    icon: MousePointerClick,
+    icon: Play,
     accent: "bg-blue-500 text-white",
     fields: [],
     outputs: [],
@@ -61,6 +69,82 @@ export const nodeRegistry = {
     outputs: [
       { path: "url", label: "URL" },
       { path: "title", label: "Titles" },
+    ],
+  },
+  act: {
+    type: "act",
+    kind: "action",
+    label: "Act",
+    icon: MousePointerClick,
+    accent: "bg-violet-500 text-white",
+    fields: [
+      {
+        key: "instruction",
+        label: "Instruction",
+        placeholder: "Click the sign in button",
+        multiline: true,
+        required: true,
+      },
+    ],
+    outputs: [
+      { path: "worked", label: "Worked" },
+      { path: "message", label: "Message" },
+      { path: "url", label: "URL" },
+    ],
+  },
+  extract: {
+    type: "extract",
+    kind: "action",
+    label: "Extract",
+    icon: FileText,
+    accent: "bg-amber-500 text-white",
+    fields: [
+      {
+        key: "instruction",
+        label: "Instruction",
+        placeholder: "Extract the article title and author",
+        multiline: true,
+        required: true,
+      },
+    ],
+    outputs: [{ path: "result", label: "Result" }],
+  },
+  observe: {
+    type: "observe",
+    kind: "action",
+    label: "Observe",
+    icon: Eye,
+    accent: "bg-sky-500 text-white",
+    fields: [
+      {
+        key: "instruction",
+        label: "Instruction",
+        placeholder: "Find the sign in button",
+        multiline: true,
+        required: true,
+      },
+    ],
+    outputs: [{ path: "matches", label: "Matches" }],
+  },
+  agent: {
+    type: "agent",
+    kind: "action",
+    label: "Agent",
+    icon: Bot,
+    accent: "bg-fuchsia-500 text-white",
+    fields: [
+      {
+        key: "instruction",
+        label: "Instruction",
+        placeholder: "Search for the latest product announcement",
+        multiline: true,
+        required: true,
+      },
+    ],
+    outputs: [
+      { path: "succeeded", label: "Succeeded" },
+      { path: "message", label: "Message" },
+      { path: "completed", label: "Completed" },
     ],
   },
 } satisfies Record<string, NodeDefinition>

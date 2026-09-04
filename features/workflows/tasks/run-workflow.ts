@@ -51,7 +51,12 @@ export const runWorkflowTask = task({
       const extensionId = process.env.BROWSERBASE_STAGEHAND_EXTENSION_ID
       if (!apiKey) throw new Error("BROWSERBASE_API_KEY is required")
 
-      browser = await browserbase.launch({ apiKey, extensionId })
+      browser = await browserbase.launch({
+        apiKey,
+        extensionId,
+        api_timeout: 3600,
+        userMetadata: { stagehand: "true" },
+      })
       stagehand = await Stagehand.create({
         browser,
         model: { modelName: "google/gemini-2.5-flash" },
