@@ -5,10 +5,26 @@ import { getWorkflow } from "@/features/data"
 import { browserbase, Stagehand } from "@browserbasehq/stagehand"
 import { interpolate } from "../lib/interpolate"
 import { nodeExecutors } from "../nodes/node-executors"
+import type { NodeType } from "../nodes/node-registry"
+
+type RunStepOutput =
+  | null
+  | boolean
+  | number
+  | string
+  | RunStepOutput[]
+  | { [key: string]: RunStepOutput }
 
 export type RunStep = {
   id: string
+  type?: NodeType
+  title?: string
   status: "pending" | "running" | "done" | "failed"
+  startedAt?: string
+  finishedAt?: string
+  durationMs?: number
+  output?: RunStepOutput
+  error?: string
 }
 
 // The Trigger.dev task the Run button fires. It loads the saved graph, works out
@@ -33,10 +49,15 @@ export const runWorkflowTask = task({
         edges.map((e) => [e.source, e.target])
       )
       .filter((id) => connected.has(id))
-    const steps: RunStep[] = order.map((id) => ({
-      id,
-      status: "pending",
-    }))
+    const steps: RunStep[] = order.map((id) => {
+      const node = byId.get(id)!
+      return {
+        id,
+        type: node.data.type,
+        title: node.data.title,
+        status: "pending",
+      }
+    })
     const nodeOutputs: Record<string, unknown> = {}
 
     metadata.set("steps", steps)
@@ -78,18 +99,28 @@ export const runWorkflowTask = task({
           ])
         )
         const step = steps.find((item) => item.id === id)!
+        const startedAt = new Date()
         step.status = "running"
+        step.startedAt = startedAt.toISOString()
         metadata.set("steps", steps)
         await metadata.flush()
 
         try {
-          nodeOutputs[id] = executor
+          const output = executor
             ? await executor({ values, getStagehand })
             : undefined
+          nodeOutputs[id] = output
           step.status = "done"
+          step.finishedAt = new Date().toISOString()
+          step.durationMs = Date.now() - startedAt.getTime()
+          step.output = output as RunStepOutput
           metadata.set("steps", steps)
+          await metadata.flush()
         } catch (error) {
           step.status = "failed"
+          step.finishedAt = new Date().toISOString()
+          step.durationMs = Date.now() - startedAt.getTime()
+          step.error = error instanceof Error ? error.message : String(error)
           metadata.set("steps", steps)
           await metadata.flush()
           throw error

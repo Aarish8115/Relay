@@ -3,9 +3,15 @@
 import { createContext, useContext, type ReactNode } from "react"
 import { useRealtimeRunsWithTag } from "@trigger.dev/react-hooks"
 
-import type { RunStep } from "../tasks/run-workflow"
+import type { runWorkflowTask, RunStep } from "../tasks/run-workflow"
+
+export type WorkflowRun = ReturnType<
+  typeof useRealtimeRunsWithTag<typeof runWorkflowTask>
+>["runs"][number]
 
 type WorkflowRunsContextValue = {
+  runs: WorkflowRun[]
+  latestRun: WorkflowRun | undefined
   steps: RunStep[] | undefined
   isLive: boolean
 }
@@ -23,9 +29,12 @@ export function WorkflowRunsProvider({
   publicAccessToken: string
   children: ReactNode
 }) {
-  const { runs } = useRealtimeRunsWithTag(`workflow:${workflowId}`, {
-    accessToken: publicAccessToken,
-  })
+  const { runs } = useRealtimeRunsWithTag<typeof runWorkflowTask>(
+    `workflow:${workflowId}`,
+    {
+      accessToken: publicAccessToken,
+    }
+  )
 
   const latestRun = runs.reduce<(typeof runs)[number] | undefined>(
     (latest, run) =>
@@ -40,6 +49,8 @@ export function WorkflowRunsProvider({
   return (
     <WorkflowRunsContext.Provider
       value={{
+        runs,
+        latestRun,
         steps,
         isLive: Boolean(latestRun?.isQueued || latestRun?.isExecuting),
       }}
@@ -50,10 +61,14 @@ export function WorkflowRunsProvider({
 }
 
 export function useLatestRunSteps(): WorkflowRunsContextValue {
+  return useWorkflowRuns()
+}
+
+export function useWorkflowRuns(): WorkflowRunsContextValue {
   const context = useContext(WorkflowRunsContext)
   if (!context) {
     throw new Error(
-      "useLatestRunSteps must be used within a WorkflowRunsProvider"
+      "useWorkflowRuns must be used within a WorkflowRunsProvider"
     )
   }
 

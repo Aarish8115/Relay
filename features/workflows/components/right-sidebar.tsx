@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useTransition } from "react"
-import { MoreHorizontal, Play, Trash2 } from "lucide-react"
+import { CircleHelp, MoreHorizontal, Play, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
 import {
@@ -50,14 +50,20 @@ import { validateGraph } from "../lib/validate-graph"
 // ---------------------------------------------------------------------------
 
 // The accent-colored icon chip, mirroring the node on the canvas.
-function NodeIcon({ type, className }: { type: NodeType; className?: string }) {
-  const def = nodeRegistry[type]
-  const Icon = def.icon
+export function NodeIcon({
+  type,
+  className,
+}: {
+  type: NodeType | undefined
+  className?: string
+}) {
+  const def = type ? nodeRegistry[type] : undefined
+  const Icon = def?.icon ?? CircleHelp
   return (
     <span
       className={cn(
         "flex size-6 shrink-0 items-center justify-center rounded-md",
-        def.accent,
+        def?.accent ?? "bg-muted text-muted-foreground",
         className
       )}
     >
