@@ -96,10 +96,16 @@ export const runWorkflowTask = task({
         }
       }
     } finally {
-      if (stagehand) {
-        await stagehand.close()
-      } else {
-        await browser?.close()
+      try {
+        if (stagehand) {
+          await stagehand.close()
+        } else {
+          await browser?.close()
+        }
+      } catch (error) {
+        logger.warn("Browser session cleanup failed", {
+          error: error instanceof Error ? error.message : String(error),
+        })
       }
     }
 
