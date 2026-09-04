@@ -9,6 +9,7 @@ import { act } from "@/features/workflows/nodes/act"
 import { extract } from "@/features/workflows/nodes/extract"
 import { openUrl } from "@/features/workflows/nodes/open-url"
 import { observe } from "@/features/workflows/nodes/observe"
+import { sendEmail } from "@/features/workflows/nodes/send-email"
 
 export type NodeContext = {
   values: Record<string, string>
@@ -40,4 +41,10 @@ export const nodeExecutors: Partial<Record<NodeType, NodeExecutor>> = {
     }),
   "open-url": async ({ values, getStagehand }) =>
     openUrl({ stagehand: await getStagehand(), url: values.url }),
+  "send-email": async ({ values }) =>
+    sendEmail({
+      to: values.to,
+      subject: values.subject,
+      body: values.body,
+    }),
 } satisfies Record<ActionNodeType, NodeExecutor>

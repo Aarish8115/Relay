@@ -4,6 +4,7 @@ import {
   Eye,
   FileText,
   Globe,
+  Mail,
   MousePointerClick,
   Play,
   type LucideIcon,
@@ -146,6 +147,35 @@ export const nodeRegistry = {
       { path: "message", label: "Message" },
       { path: "completed", label: "Completed" },
     ],
+  },
+  "send-email": {
+    type: "send-email",
+    kind: "action",
+    label: "Send Email",
+    icon: Mail,
+    accent: "bg-rose-500 text-white",
+    fields: [
+      {
+        key: "to",
+        label: "Recipient",
+        placeholder: "delivered@resend.dev",
+        required: true,
+      },
+      {
+        key: "subject",
+        label: "Subject",
+        placeholder: "Your subject",
+        required: true,
+      },
+      {
+        key: "body",
+        label: "Body",
+        placeholder: "Write your email",
+        multiline: true,
+        required: true,
+      },
+    ],
+    outputs: [{ path: "id", label: "Email ID" }],
   },
 } satisfies Record<string, NodeDefinition>
 
